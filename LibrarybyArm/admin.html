@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — คลังเอกสาร PDF</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f4f5f7;color:#111;min-height:100vh}
+.bar{background:#1a2740;height:54px;display:flex;align-items:center;padding:0 1.5rem;gap:10px}
+.bar-title{color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.bar-title svg{color:#4da3ff}
+.adm{background:#e53e3e;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.cfgst{font-size:11px;color:rgba(255,255,255,.55);margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.bar-right{margin-left:auto;display:flex;gap:8px;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;font-size:13px;border-radius:8px;border:none;cursor:pointer;font-weight:500;transition:all .15s;white-space:nowrap}
+.bg{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}.bg:hover{background:rgba(255,255,255,.18)}
+.bgreen{background:#16a34a;color:#fff}.bgreen:hover{background:#15803d}
+.bblue{background:#185FA5;color:#fff}.bblue:hover{background:#1568b8}
+.bred{background:#fff;color:#dc2626;border:1px solid #fecaca}.bred:hover{background:#fef2f2}
+.bsm{padding:5px 10px;font-size:12px}
+.bsave{background:#16a34a;color:#fff;border:none}.bsave:hover{background:#15803d}
+.bsave.saving{opacity:.7;cursor:default}
+
+.main{max-width:960px;margin:0 auto;padding:1.5rem}
+.info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px 15px;margin-bottom:1.25rem;font-size:13px;color:#1e40af;display:flex;gap:9px;line-height:1.6}
+.row-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.row-head-title{font-size:15px;font-weight:600}
+.cnt{font-size:12px;color:#9ca3af}
+
+.devlist{display:flex;flex-direction:column;gap:12px}
+.devcard{background:#fff;border:1px solid #e5e7eb;border-radius:12px}
+.dhead{padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #f3f4f6}
+.ibtn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:all .15s}
+.ibtn:hover{border-color:#185FA5;box-shadow:0 0 0 3px #dbeafe}
+.ihint{font-size:10px;color:#9ca3af;text-align:center;margin-top:1px}
+.dinfo{flex:1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.dname{font-size:14px;font-weight:600;color:#111;border:1px solid transparent;outline:none;background:transparent;padding:4px 8px;border-radius:6px;width:185px;transition:all .15s}
+.dname:focus{background:#f3f4f6;border-color:#e5e7eb}
+.dots{display:flex;gap:4px;flex-wrap:wrap}
+.dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid rgba(0,0,0,.08);transition:transform .1s}
+.dot:hover{transform:scale(1.2)}
+.dot.on{outline:3px solid #185FA5;outline-offset:2px}
+
+.docwrap{padding:10px 16px 14px;display:flex;flex-direction:column;gap:6px}
+.docrow{display:flex;align-items:center;gap:7px;background:#f9fafb;border:1px solid #f0f2f5;border-radius:8px;padding:7px 10px;flex-wrap:wrap}
+.dico{font-size:15px;flex-shrink:0}
+.dnam{flex:1.5;min-width:120px;font-size:13px;font-weight:500;border:1px solid transparent;outline:none;background:transparent;padding:3px 6px;border-radius:5px;transition:all .15s}
+.dnam:focus{background:#fff;border-color:#e5e7eb}
+.dtyp{font-size:12px;border:1px solid #e5e7eb;border-radius:6px;padding:3px 7px;background:#fff;color:#374151;cursor:pointer;outline:none;flex-shrink:0}
+.uchip{font-size:11px;padding:3px 9px;border-radius:12px;font-weight:500;flex-shrink:0;white-space:nowrap}
+.uchip.ok{background:#dcfce7;color:#15803d}
+.uchip.no{background:#fef3c7;color:#92400e}
+.ubtn{padding:5px 12px;font-size:12px;border:1px solid #93c5fd;border-radius:7px;background:#eff6ff;cursor:pointer;color:#185FA5;font-weight:500;flex-shrink:0}
+.ubtn:hover{background:#dbeafe}
+.delbtn{width:28px;height:28px;border-radius:6px;border:none;background:#fee2e2;color:#dc2626;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.delbtn:hover{background:#fecaca}
+.adddoc{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:12px;color:#185FA5;background:#eff6ff;border:1px dashed #93c5fd;border-radius:7px;cursor:pointer;margin-top:4px;width:fit-content}
+.adddoc:hover{background:#dbeafe}
+.adddev{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:2px dashed #d1d5db;border-radius:12px;color:#9ca3af;cursor:pointer;font-size:14px;background:transparent;width:100%;margin-top:12px;transition:all .15s}
+.adddev:hover{border-color:#185FA5;color:#185FA5;background:#eff6ff}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .3s;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:#16a34a}
+.toast.er{background:#dc2626}
+
+/* Modals */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:1rem}
+.ov.on{display:flex}
+.mod{background:#fff;border-radius:16px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.2);max-height:90vh;display:flex;flex-direction:column}
+.mh{padding:15px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.mt{font-size:15px;font-weight:600}
+.mx{width:30px;height:30px;border:none;background:#f3f4f6;border-radius:50%;cursor:pointer;font-size:16px;color:#374151}
+.mx:hover{background:#e5e7eb}
+.mb{padding:20px;overflow-y:auto;flex:1}
+.mf{padding:13px 20px;border-top:1px solid #f3f4f6;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+
+.imod{max-width:440px}
+.egl{font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:.07em;text-transform:uppercase;margin:12px 0 5px}
+.egl:first-child{margin-top:0}
+.egg{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.ec{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;border-radius:7px;border:2px solid transparent;transition:all .1s}
+.ec:hover{background:#f3f4f6;transform:scale(1.2)}
+.ec.on{border-color:#185FA5;background:#eff6ff}
+
+.umod{max-width:560px}
+.fl{font-size:12px;font-weight:600;color:#374151;margin-bottom:5px}
+.hlp{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;font-size:12px;color:#374151;line-height:1.8;margin-bottom:14px}
+.hlp code{background:#e5e7eb;padding:1px 5px;border-radius:4px;font-size:11px;font-family:monospace}
+.uta{width:100%;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;color:#111;font-family:monospace;resize:vertical;min-height:54px}
+.uta:focus{border-color:#185FA5}
+.ufi{width:100%;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;color:#111;font-family:monospace}
+.ufi:focus{border-color:#185FA5}
+.rbox{padding:10px 12px;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;background:#f0fdf4;color:#166534;font-family:monospace;word-break:break-all;min-height:42px}
+.st{font-size:12px;margin-top:5px;font-weight:500}
+.st.ok{color:#16a34a}.st.wn{color:#d97706}.st.er{color:#dc2626}
+.hr{border:none;border-top:1px solid #f0f2f5;margin:14px 0}
+
+.emod{max-width:680px}
+.slist{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.step{display:flex;gap:12px;align-items:flex-start}
+.sn{width:24px;height:24px;background:#185FA5;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.st2{font-size:13px;color:#374151;line-height:1.6}
+.st2 strong{color:#111}
+.cwrap{position:relative}
+.cb{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;color:#374151;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.cpbtn{position:absolute;top:8px;right:8px;padding:4px 10px;font-size:11px;background:#fff;border:1px solid #e5e7eb;border-radius:5px;cursor:pointer}
+.ds{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:14px}
+.dr{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f2f5;font-size:12px;color:#374151}
+.dr:last-child{border:none}
+.dok{color:#16a34a;font-weight:600}
+.dwn{color:#d97706;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    จัดการคลังเอกสาร PDF <span class="adm">ADMIN</span>
+    <span class="cfgst" id="cfgst"></span>
+  </div>
+  <div class="bar-right">
+    <button class="btn bg bsm" onclick="doPreview()">👁 Preview</button>
+    <button class="btn bg bsm" onclick="loadConfig()">📂 Load</button>
+    <button class="btn bsave bsm" id="savebtn" onclick="saveToFile()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      บันทึก
+    </button>
+    <button class="btn bg bsm" onclick="doReset()" style="border-color:#f87171;color:#fca5a5">🔄 Reset</button>
+    <button class="btn bgreen bsm" onclick="openExp()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export index.html
+    </button>
+  </div>
+</div>
+<input type="file" id="fimp" accept=".json,.html" style="display:none" onchange="onFileLoad(this)">
+<div class="toast" id="toast"></div>
+
+<div class="main">
+  <div class="info" id="infobar">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div>คลิก <strong>ไอคอน</strong> เพื่อเปลี่ยน · กด <strong>🔗 แก้ URL</strong> เพื่อใส่ลิงก์ Google Drive · กด <strong>💾 บันทึก</strong> เพื่อบันทึกลงไฟล์ <code style="background:#dbeafe;padding:1px 5px;border-radius:4px;font-size:11px">config.json</code></div>
+  </div>
+  <div class="row-head">
+    <div class="row-head-title">รายการอุปกรณ์</div>
+    <div class="cnt" id="cnt"></div>
+  </div>
+  <div class="devlist" id="devlist"></div>
+  <button class="adddev" onclick="addDev()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    เพิ่มอุปกรณ์ใหม่
+  </button>
+</div>
+
+<!-- First Run Modal -->
+<div class="ov" id="frov">
+  <div class="mod" style="max-width:440px">
+    <div class="mh"><div class="mt">📂 เริ่มต้นใช้งาน Admin</div></div>
+    <div class="mb">
+      <div style="font-size:13px;color:#374151;line-height:1.9;margin-bottom:6px">
+        ไม่พบข้อมูลที่บันทึกไว้ในเครื่องนี้<br>
+        <strong>หากคุณมีไฟล์อยู่แล้ว</strong> กรุณากด <strong>"Load ไฟล์เดิม"</strong><br>
+        รองรับทั้ง <code style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-family:monospace">config.json</code> และ <code style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-family:monospace">index.html</code><br><br>
+        <span style="color:#dc2626;font-weight:600">⚠️ ถ้ากด "เริ่มใหม่" แล้ว Export โดยไม่ Load ข้อมูลเดิมก่อน ข้อมูลเดิมจะหายทั้งหมด</span>
+      </div>
+    </div>
+    <div class="mf" style="justify-content:space-between">
+      <button class="btn bred" onclick="closeFR()">เริ่มใหม่ทั้งหมด</button>
+      <button class="btn bgreen" onclick="closeFR();loadConfig()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Load ไฟล์เดิม
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Icon Modal -->
+<div class="ov" id="iov">
+  <div class="mod imod">
+    <div class="mh"><div class="mt">🎨 เลือกไอคอน</div><button class="mx" onclick="closeIco()">✕</button></div>
+    <div class="mb" id="ibody"></div>
+    <div class="mf">
+      <button class="btn bblue" onclick="okIco()">✅ ยืนยัน</button>
+      <button class="btn bred" onclick="closeIco()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- URL Modal -->
+<div class="ov" id="uov">
+  <div class="mod umod">
+    <div class="mh"><div class="mt">🔗 แก้ไขลิงก์ Google Drive</div><button class="mx" onclick="closeUrl()">✕</button></div>
+    <div class="mb">
+      <div class="hlp">
+        <strong>วิธีได้ลิงก์:</strong> เปิดไฟล์ PDF ใน Drive → Share → Copy link<br>
+        จะได้: <code>…/file/d/<b>FILE_ID</b>/view?usp=sharing</code><br>
+        วางลงช่องแรก แล้วกด <strong>"แปลงอัตโนมัติ"</strong>
+      </div>
+      <div class="fl">① วาง URL จาก Google Drive:</div>
+      <textarea class="uta" id="uraw" rows="2" placeholder="https://drive.google.com/file/d/ABC.../view?usp=sharing" oninput="liveConv()"></textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <button class="btn bblue bsm" onclick="liveConv()">🔄 แปลงอัตโนมัติ</button>
+        <span class="st" id="cst"></span>
+      </div>
+      <hr class="hr">
+      <div class="fl">② ผลลัพธ์ Preview URL:</div>
+      <div class="rbox" id="ures">— รอวาง URL ด้านบน —</div>
+      <hr class="hr">
+      <div class="fl">③ หรือพิมพ์ URL ตรงๆ:</div>
+      <input class="ufi" id="udir" type="text" placeholder="https://drive.google.com/file/d/FILE_ID/preview" oninput="syncDir()">
+      <div class="st" id="dst" style="margin-top:5px"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bblue" onclick="okUrl()">💾 บันทึก URL</button>
+      <button class="btn bred" onclick="closeUrl()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="ov" id="eov" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="mod emod">
+    <div class="mh"><div class="mt">📤 Export &amp; อัปเดต GitHub</div><button class="mx" onclick="document.getElementById('eov').classList.remove('on')">✕</button></div>
+    <div class="mb">
+      <div class="ds" id="dsum"></div>
+      <div class="slist">
+        <div class="step"><div class="sn">1</div><div class="st2">กด <strong>ดาวน์โหลด index.html</strong> ด้านล่าง</div></div>
+        <div class="step"><div class="sn">2</div><div class="st2">ไป GitHub → คลิก <strong>index.html</strong> → ✏️ → <strong>Upload new file</strong></div></div>
+        <div class="step"><div class="sn">3</div><div class="st2">กด <strong>Commit changes</strong> — เว็บอัปเดตใน 1–2 นาที</div></div>
+      </div>
+      <div class="cwrap">
+        <div class="cb" id="eprev"></div>
+        <button class="cpbtn" onclick="doCopy()">คัดลอก</button>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bgreen" onclick="doDownload()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        ดาวน์โหลด index.html
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════
+const EG = [
+  {l:'เครื่องจักร/ไฟฟ้า',    e:['⚙️','🔩','🪛','🪚','🔧','🛠️','🧰','🔨','⛏️','🪝','🪜','🔗','🧲','⚡','🔋','🔌','💡','🔦','🕯️','🌡️']},
+  {l:'คอมพิวเตอร์/เทคโนโลยี',e:['🖥️','💻','🖨️','⌨️','🖱️','📱','📟','📠','☎️','📡','🎛️','📺','📷','📸','🎥','📹','🔭','🔬','🧪','🧫']},
+  {l:'ยานพาหนะ/โรงงาน',      e:['🚗','🚛','🚜','🏗️','🚧','⛽','🛞','🛢️','🪣','🏭','🔑','🗝️','🚪','🪟','🏠','🏢','🏬','🏦','⛏️','🪨']},
+  {l:'ระบบ/ความปลอดภัย',     e:['🛡️','🔐','🔒','🔓','🚨','⚠️','🚫','✅','❌','🔴','🟡','🟢','🔵','⭕','🔔','📢','📣','🚦','🚥','🪧']},
+  {l:'เอกสาร/ข้อมูล',        e:['📋','📘','📗','📙','📕','📓','📔','📒','📚','📖','📄','📃','📑','🗒️','🗓️','📊','📈','📉','🗂️','📂']},
+  {l:'อื่นๆ',                 e:['💧','🧯','🪣','🧴','🧹','🧺','🧻','🧼','💊','🩹','🩺','🧬','🦺','👷','🥽','🧤','📦','🗄️','🏷️','🎯']},
+];
+const COLS = ['#dbeafe','#dcfce7','#fef3c7','#ede9fe','#fce7f3','#ffedd5','#e0f2fe','#f0fdf4','#fdf4ff','#fff7ed','#fef2f2','#ecfdf5'];
+const TYPS = [{v:'manual',l:'📘 คู่มือ'},{v:'fix',l:'🔧 แก้ไขปัญหา'},{v:'install',l:'⚙️ ติดตั้ง'},{v:'spec',l:'📋 ข้อมูลเทคนิค'},{v:'safety',l:'🛡️ ความปลอดภัย'}];
+const TC = {
+  manual: {l:'คู่มือ',       i:'📘',b:'#dbeafe',t:'#1d4ed8'},
+  fix:    {l:'แก้ไขปัญหา',  i:'🔧',b:'#fee2e2',t:'#b91c1c'},
+  install:{l:'ติดตั้ง',      i:'⚙️',b:'#dcfce7',t:'#15803d'},
+  spec:   {l:'ข้อมูลเทคนิค',i:'📋',b:'#ede9fe',t:'#6d28d9'},
+  safety: {l:'ความปลอดภัย', i:'🛡️',b:'#fef3c7',t:'#b45309'},
+};
+
+// ═══════════════════════════════════════════════════
+//  INDEXEDDB — เก็บ file handle ระหว่าง session
+// ═══════════════════════════════════════════════════
+const IDB_NAME = 'pdflib_fsa', IDB_STORE = 'handles', IDB_KEY = 'cfg';
+
+function openIDB(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open(IDB_NAME,1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = () => rej();
+  });
+}
+async function getIDBHandle(){
+  try{
+    const db = await openIDB();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction(IDB_STORE,'readonly');
+      const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+      req.onsuccess = e => res(e.target.result||null);
+      req.onerror = () => res(null);
+    });
+  }catch{return null;}
+}
+async function setIDBHandle(h){
+  try{
+    const db = await openIDB();
+    return new Promise((res)=>{
+      const tx = db.transaction(IDB_STORE,'readwrite');
+      tx.objectStore(IDB_STORE).put(h,IDB_KEY);
+      tx.oncomplete = res;
+      tx.onerror = res;
+    });
+  }catch{}
+}
+async function clearIDBHandle(){
+  try{
+    const db = await openIDB();
+    return new Promise((res)=>{
+      const tx = db.transaction(IDB_STORE,'readwrite');
+      tx.objectStore(IDB_STORE).delete(IDB_KEY);
+      tx.oncomplete = res;
+    });
+  }catch{}
+}
+
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+function uid(){return Math.random().toString(36).slice(2,9)}
+
+function mkDefault(){
+  return [
+    {id:uid(),icon:'🔩',color:'#dbeafe',name:'อุปกรณ์ A',docs:[
+      {id:uid(),name:'คู่มือการใช้งาน',   type:'manual', file:''},
+      {id:uid(),name:'วิธีการแก้ไขปัญหา',type:'fix',    file:''},
+      {id:uid(),name:'คู่มือการติดตั้ง',  type:'install',file:''},
+    ]},
+    {id:uid(),icon:'⚙️',color:'#dcfce7',name:'อุปกรณ์ B',docs:[
+      {id:uid(),name:'คู่มือการใช้งาน',       type:'manual',file:''},
+      {id:uid(),name:'ข้อมูลจำเพาะทางเทคนิค',type:'spec',  file:''},
+    ]},
+  ];
+}
+
+let _hasLocalData = false;
+function loadData(){
+  try{
+    const r = localStorage.getItem('pdflib_v4');
+    if(r){const d=JSON.parse(r);if(Array.isArray(d)&&d.length&&d[0].id){_hasLocalData=true;return d;}}
+  }catch(e){}
+  return mkDefault();
+}
+
+let DEV = loadData();
+function save(){localStorage.setItem('pdflib_v4',JSON.stringify(DEV));updateCnt();}
+function updateCnt(){
+  const t=DEV.reduce((s,d)=>s+d.docs.length,0);
+  document.getElementById('cnt').textContent = DEV.length+' อุปกรณ์ · '+t+' เอกสาร';
+}
+function gd(id){return DEV.find(d=>d.id===id)}
+function gdoc(did,docid){return gd(did)?.docs.find(d=>d.id===docid)}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
+function applyData(parsed){
+  DEV = parsed.map(d=>({
+    id:d.id||uid(),icon:d.icon||'📦',color:d.color||'#dbeafe',name:d.name||'อุปกรณ์',
+    docs:(d.docs||[]).map(doc=>({id:doc.id||uid(),name:doc.name||'เอกสาร',type:doc.type||'manual',file:doc.file||''}))
+  }));
+  save();render();
+}
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+let _toastTimer = null;
+function toast(msg, type='ok'){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast on ' + type;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>el.classList.remove('on'), 2800);
+}
+
+// ═══════════════════════════════════════════════════
+//  CFG STATUS BAR
+// ═══════════════════════════════════════════════════
+let _cfgHandle = null;
+function setCfgSt(text){document.getElementById('cfgst').textContent = text;}
+
+// ═══════════════════════════════════════════════════
+//  SAVE TO config.json  (File System Access API)
+// ═══════════════════════════════════════════════════
+async function saveToFile(){
+  const btn = document.getElementById('savebtn');
+  const fsa = 'showSaveFilePicker' in window;
+
+  if(!fsa){
+    // Fallback: download config.json
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(DEV,null,2)],{type:'application/json;charset=utf-8'}));
+    a.download = 'config.json';
+    a.click();
+    toast('ดาวน์โหลด config.json แล้ว (browser ไม่รองรับ auto-save)');
+    return;
+  }
+
+  btn.classList.add('saving');
+  try{
+    if(!_cfgHandle){
+      _cfgHandle = await window.showSaveFilePicker({
+        suggestedName:'config.json',
+        types:[{description:'JSON Config',accept:{'application/json':['.json']}}]
+      });
+      await setIDBHandle(_cfgHandle);
+    }
+
+    // Request write permission if needed
+    let perm = await _cfgHandle.queryPermission({mode:'readwrite'});
+    if(perm !== 'granted'){
+      perm = await _cfgHandle.requestPermission({mode:'readwrite'});
+      if(perm !== 'granted') throw new Error('ไม่ได้รับอนุญาตเขียนไฟล์');
+    }
+
+    const writable = await _cfgHandle.createWritable();
+    await writable.write(JSON.stringify(DEV,null,2));
+    await writable.close();
+    setCfgSt('· 💾 '+_cfgHandle.name+' · บันทึกแล้ว ✓');
+    toast('บันทึก '+_cfgHandle.name+' แล้ว ✓');
+  }catch(err){
+    if(err.name !== 'AbortError'){
+      toast('บันทึกไม่สำเร็จ: '+err.message,'er');
+    }
+  }finally{
+    btn.classList.remove('saving');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  LOAD config.json / index.html
+// ═══════════════════════════════════════════════════
+async function loadConfig(){
+  const fsa = 'showOpenFilePicker' in window;
+  if(!fsa){
+    // Fallback: use classic file input
+    document.getElementById('fimp').click();
+    return;
+  }
+  try{
+    const [handle] = await window.showOpenFilePicker({
+      types:[
+        {description:'Config JSON',accept:{'application/json':['.json']}},
+        {description:'Index HTML', accept:{'text/html':['.html']}}
+      ]
+    });
+    const file = await handle.getFile();
+    const text = await file.text();
+
+    let parsed;
+    if(file.name.endsWith('.json')){
+      parsed = JSON.parse(text);
+      if(!Array.isArray(parsed)||!parsed.length) throw new Error('ข้อมูลว่างเปล่า');
+      // Remember this handle for future saves
+      _cfgHandle = handle;
+      await setIDBHandle(handle);
+      setCfgSt('· 📄 '+handle.name);
+    } else {
+      // Parse from HTML: extract var D = [...];
+      const m = text.match(/var\s+D\s*=\s*(\[[\s\S]*?\]);/);
+      if(!m) throw new Error('ไม่พบข้อมูลในไฟล์ HTML นี้');
+      parsed = JSON.parse(m[1]);
+      if(!Array.isArray(parsed)||!parsed.length) throw new Error('ข้อมูลว่างเปล่า');
+    }
+
+    applyData(parsed);
+    toast('โหลดสำเร็จ '+DEV.length+' อุปกรณ์ · '+DEV.reduce((s,d)=>s+d.docs.length,0)+' เอกสาร');
+  }catch(err){
+    if(err.name !== 'AbortError') toast('โหลดไม่สำเร็จ: '+err.message,'er');
+  }
+}
+
+// Fallback file input handler (browsers ที่ไม่รองรับ FSA)
+function onFileLoad(inp){
+  const f = inp.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = function(e){
+    try{
+      const text = e.target.result;
+      let parsed;
+      if(f.name.endsWith('.json')){
+        parsed = JSON.parse(text);
+        if(!Array.isArray(parsed)||!parsed.length) throw new Error('ข้อมูลว่างเปล่า');
+      } else {
+        const m = text.match(/var\s+D\s*=\s*(\[[\s\S]*?\]);/);
+        if(!m) throw new Error('ไม่พบข้อมูลในไฟล์นี้');
+        parsed = JSON.parse(m[1]);
+        if(!Array.isArray(parsed)||!parsed.length) throw new Error('ข้อมูลว่างเปล่า');
+      }
+      applyData(parsed);
+      toast('โหลดสำเร็จ '+DEV.length+' อุปกรณ์');
+    }catch(err){toast('โหลดไม่สำเร็จ: '+err.message,'er');}
+    inp.value='';
+  };
+  r.readAsText(f);
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTO-LOAD จาก handle ที่บันทึกไว้ (on startup)
+// ═══════════════════════════════════════════════════
+async function tryAutoLoad(){
+  const handle = await getIDBHandle();
+  if(!handle) return false;
+
+  try{
+    const perm = await handle.queryPermission({mode:'readwrite'});
+    if(perm !== 'granted') {
+      // Permission expired — show status but don't auto-request
+      setCfgSt('· 📄 '+handle.name+' (กด 💾 บันทึก เพื่อเชื่อมต่อใหม่)');
+      _cfgHandle = handle;
+      return false;
+    }
+    const file = await handle.getFile();
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if(!Array.isArray(parsed)||!parsed.length||!parsed[0].id) return false;
+    DEV = parsed.map(d=>({
+      id:d.id||uid(),icon:d.icon||'📦',color:d.color||'#dbeafe',name:d.name||'อุปกรณ์',
+      docs:(d.docs||[]).map(doc=>({id:doc.id||uid(),name:doc.name||'เอกสาร',type:doc.type||'manual',file:doc.file||''}))
+    }));
+    save();render();
+    _cfgHandle = handle;
+    setCfgSt('· 💾 '+handle.name);
+    return true;
+  }catch{
+    await clearIDBHandle();
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER ADMIN
+// ═══════════════════════════════════════════════════
+function render(){
+  document.getElementById('devlist').innerHTML = DEV.map(dev => {
+    const rows = dev.docs.map(doc => {
+      const c = TC[doc.type]||TC.manual;
+      const ok = doc.file && doc.file.includes('/preview');
+      return `<div class="docrow">
+        <span class="dico">${c.i}</span>
+        <input class="dnam" value="${esc(doc.name)}" oninput="gdoc('${dev.id}','${doc.id}').name=this.value;save()" placeholder="ชื่อเอกสาร">
+        <select class="dtyp" onchange="gdoc('${dev.id}','${doc.id}').type=this.value;save();render()">
+          ${TYPS.map(t=>`<option value="${t.v}"${doc.type===t.v?' selected':''}>${t.l}</option>`).join('')}
+        </select>
+        <span class="uchip ${ok?'ok':'no'}">${ok?'✅ มี URL':'⚠️ '+(doc.file?'ยังไม่ถูก':'ไม่มี URL')}</span>
+        <button class="ubtn" onclick="openUrl('${dev.id}','${doc.id}')">🔗 แก้ URL</button>
+        <button class="delbtn" onclick="delDoc('${dev.id}','${doc.id}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+    return `<div class="devcard">
+      <div class="dhead">
+        <div style="text-align:center;flex-shrink:0">
+          <div class="ibtn" style="background:${dev.color}" onclick="openIco('${dev.id}')">${dev.icon}</div>
+          <div class="ihint">เปลี่ยน</div>
+        </div>
+        <div class="dinfo">
+          <input class="dname" value="${esc(dev.name)}" oninput="gd('${dev.id}').name=this.value;save()" placeholder="ชื่ออุปกรณ์">
+          <div class="dots">${COLS.map(c=>`<div class="dot${dev.color===c?' on':''}" style="background:${c}" onclick="gd('${dev.id}').color='${c}';save();render()"></div>`).join('')}</div>
+        </div>
+        <button class="btn bred bsm" onclick="delDev('${dev.id}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>ลบ
+        </button>
+      </div>
+      <div class="docwrap">
+        ${rows}
+        <button class="adddoc" onclick="addDoc('${dev.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มเอกสาร
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+  updateCnt();
+}
+
+function delDev(id){
+  if(!confirm('ลบอุปกรณ์นี้?'))return;
+  DEV=DEV.filter(d=>d.id!==id);
+  save();render();
+  if(DEV.length===0) toast('ไม่มีอุปกรณ์เหลืออยู่ — กด 📂 Load หรือเพิ่มอุปกรณ์ก่อน Export','er');
+}
+function addDev(){
+  DEV.push({id:uid(),icon:'📦',color:COLS[DEV.length%COLS.length],name:'อุปกรณ์ใหม่',docs:[]});
+  save();render();
+  setTimeout(()=>{const e=document.querySelectorAll('.dname');e[e.length-1]?.select()},60);
+}
+function addDoc(devId){gd(devId).docs.push({id:uid(),name:'เอกสารใหม่',type:'manual',file:''});save();render()}
+function delDoc(devId,docId){const d=gd(devId);d.docs=d.docs.filter(x=>x.id!==docId);save();render()}
+function doReset(){
+  if(!confirm('⚠️ ล้างข้อมูลทั้งหมดและเริ่มใหม่?'))return;
+  ['pdflib_v4','pdflib_v3','pdf_devices_v2','pdf_devices'].forEach(k=>localStorage.removeItem(k));
+  clearIDBHandle();_cfgHandle=null;setCfgSt('');
+  DEV=mkDefault();render();
+}
+
+// ═══════════════════════════════════════════════════
+//  ICON MODAL
+// ═══════════════════════════════════════════════════
+let _iid=null,_isel=null;
+function openIco(id){
+  _iid=id;_isel=gd(id).icon;
+  document.getElementById('ibody').innerHTML = EG.map(g=>
+    `<div class="egl">${g.l}</div><div class="egg">${g.e.map(e=>`<div class="ec${e===_isel?' on':''}" onclick="pickIco('${e}',this)">${e}</div>`).join('')}</div>`
+  ).join('');
+  document.getElementById('iov').classList.add('on');
+}
+function pickIco(e,el){_isel=e;document.querySelectorAll('.ec').forEach(c=>c.classList.remove('on'));el.classList.add('on')}
+function okIco(){if(_iid&&_isel){gd(_iid).icon=_isel;save();render()}closeIco()}
+function closeIco(){document.getElementById('iov').classList.remove('on')}
+document.getElementById('iov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeIco()});
+
+// ═══════════════════════════════════════════════════
+//  URL MODAL
+// ═══════════════════════════════════════════════════
+let _udid=null,_udocid=null,_pend='';
+function openUrl(did,docid){
+  _udid=did;_udocid=docid;
+  const cur=gdoc(did,docid)?.file||'';
+  document.getElementById('uraw').value='';
+  document.getElementById('udir').value=cur;
+  document.getElementById('ures').textContent=cur||'— รอวาง URL ด้านบน —';
+  document.getElementById('cst').textContent='';
+  _pend=cur;setDst(cur);
+  document.getElementById('uov').classList.add('on');
+}
+function liveConv(){
+  const raw=document.getElementById('uraw').value.trim();
+  if(!raw)return;
+  const m=raw.match(/\/file\/d\/([^\/\?&\s]+)/);
+  const el=document.getElementById('cst');
+  if(m){
+    const r='https://drive.google.com/file/d/'+m[1]+'/preview';
+    document.getElementById('ures').textContent=r;
+    document.getElementById('udir').value=r;
+    _pend=r;el.className='st ok';el.textContent='✅ แปลงสำเร็จ';setDst(r);
+  }else{el.className='st er';el.textContent='❌ ไม่พบ File ID'}
+}
+function syncDir(){const v=document.getElementById('udir').value.trim();_pend=v;document.getElementById('ures').textContent=v||'—';setDst(v)}
+function setDst(u){
+  const el=document.getElementById('dst');
+  if(!u){el.className='st wn';el.textContent='⚠️ ยังไม่มี URL'}
+  else if(u.includes('/preview')){el.className='st ok';el.textContent='✅ URL ถูกต้อง'}
+  else if(u.includes('drive.google.com')){el.className='st wn';el.textContent='⚠️ ยังไม่ได้แปลง'}
+  else{el.className='st wn';el.textContent='⚠️ ไม่ใช่ Drive URL'}
+}
+function okUrl(){const d=gdoc(_udid,_udocid);if(d){d.file=_pend;save();render()}closeUrl()}
+function closeUrl(){document.getElementById('uov').classList.remove('on')}
+document.getElementById('uov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeUrl()});
+
+// ═══════════════════════════════════════════════════
+//  FIRST RUN MODAL
+// ═══════════════════════════════════════════════════
+function closeFR(){document.getElementById('frov').classList.remove('on')}
+
+// ═══════════════════════════════════════════════════
+//  EXPORT / PREVIEW / DOWNLOAD
+// ═══════════════════════════════════════════════════
+function doPreview(){
+  try{
+    const w=window.open('','_blank');
+    w.document.open();w.document.write(buildViewerHTML());w.document.close();
+  }catch(err){toast(err.message,'er');}
+}
+function openExp(){
+  if(DEV.length===0){
+    toast('⚠️ ไม่มีข้อมูลอุปกรณ์ — กด 📂 Load เพื่อโหลดข้อมูลก่อน','er');
+    return;
+  }
+  const total=DEV.reduce((s,d)=>s+d.docs.length,0);
+  const ok=DEV.reduce((s,d)=>s+d.docs.filter(x=>x.file&&x.file.includes('/preview')).length,0);
+  const no=total-ok;
+  const devList=DEV.map(d=>'<div class="dr"><span>'+d.icon+' '+d.name+'</span><span style="color:#6b7280">'+d.docs.length+' เอกสาร</span></div>').join('');
+  document.getElementById('dsum').innerHTML=
+    devList+
+    '<div class="dr" style="border-top:2px solid #e5e7eb;margin-top:4px;padding-top:8px"><span>รวมเอกสาร</span><span>'+total+'</span></div>'+
+    '<div class="dr"><span>มี URL</span><span class="dok">✅ '+ok+'</span></div>'+
+    '<div class="dr"><span>ยังไม่มี URL</span><span class="'+(no>0?'dwn':'dok')+'">'+(no>0?'⚠️ ':'✅ ')+no+'</span></div>';
+  const h=buildViewerHTML();
+  document.getElementById('eprev').textContent=h.slice(0,1500)+(h.length>1500?'\n…':'');
+  document.getElementById('eov').classList.add('on');
+}
+function doCopy(){
+  try{
+    navigator.clipboard.writeText(buildViewerHTML()).then(()=>{
+      const b=document.querySelector('.cpbtn');
+      b.textContent='คัดลอกแล้ว ✓';setTimeout(()=>b.textContent='คัดลอก',2000);
+    });
+  }catch(err){toast(err.message,'er');}
+}
+function doDownload(){
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([buildViewerHTML()],{type:'text/html;charset=utf-8'}));
+    a.download='index.html';a.click();
+  }catch(err){toast(err.message,'er');}
+}
+
+// ═══════════════════════════════════════════════════
+//  BUILD VIEWER HTML
+// ═══════════════════════════════════════════════════
+function buildViewerHTML(){
+  if(!DEV||!DEV.length) throw new Error('ไม่มีข้อมูลอุปกรณ์ กรุณา Load ข้อมูลก่อน Export');
+  const data = JSON.stringify(DEV);
+  return `<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คลังเอกสาร PDF</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f2f5;color:#111;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.topbar{height:52px;background:#1a2740;display:flex;align-items:center;padding:0 1rem;gap:12px;flex-shrink:0}
+.topbar-logo{display:flex;align-items:center;gap:8px;color:#fff;font-size:15px;font-weight:600;width:240px}
+.topbar-logo svg{color:#4da3ff}
+.topbar-search{flex:1;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;max-width:340px}
+.topbar-search input{background:none;border:none;outline:none;color:#fff;font-size:13px;width:100%}
+.topbar-search input::placeholder{color:rgba(255,255,255,.45)}
+.topbar-right{margin-left:auto;display:flex;gap:8px}
+.topbar-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:7px;padding:5px 13px;font-size:12px;cursor:pointer}
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:252px;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .2s}
+.sidebar.collapsed{width:52px}
+.sidebar-header{padding:12px 14px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sidebar-header span{font-size:11px;font-weight:600;color:#9ca3af;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+.sidebar.collapsed .sidebar-header span{opacity:0}
+.toggle-btn{width:28px;height:28px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280}
+.sidebar-scroll{overflow-y:auto;flex:1;padding:8px 0}
+.device-group{margin-bottom:2px}
+.device-header{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;transition:background .1s;user-select:none}
+.device-header:hover{background:#f9fafb}
+.device-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.device-name{font-size:13px;font-weight:600;color:#374151;flex:1;white-space:nowrap;overflow:hidden}
+.device-count{font-size:10px;background:#f3f4f6;color:#9ca3af;padding:1px 6px;border-radius:10px;flex-shrink:0}
+.chevron{color:#9ca3af;transition:transform .2s;flex-shrink:0}
+.chevron.open{transform:rotate(90deg)}
+.sidebar.collapsed .device-name,.sidebar.collapsed .device-count,.sidebar.collapsed .chevron{display:none}
+.doc-items{overflow:hidden;max-height:0;transition:max-height .25s ease}
+.doc-items.open{max-height:600px}
+.doc-item{display:flex;align-items:center;gap:9px;padding:7px 14px 7px 28px;cursor:pointer;transition:background .1s;border-left:3px solid transparent}
+.doc-item:hover{background:#f9fafb}
+.doc-item.active{background:#eff6ff;border-left-color:#185FA5}
+.doc-item.active .doc-item-name{color:#185FA5;font-weight:600}
+.doc-item-icon{font-size:14px;flex-shrink:0}
+.doc-item-name{font-size:12.5px;color:#4b5563;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar.collapsed .doc-items{display:none}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#9ca3af;text-align:center;padding:2rem}
+.welcome-icon{font-size:56px;opacity:.5}
+.welcome h2{font-size:18px;font-weight:600;color:#6b7280}
+.welcome p{font-size:14px;max-width:300px;line-height:1.6}
+.pdf-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.pdf-toolbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.pdf-toolbar-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.pdf-file-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;flex-shrink:0}
+.pdf-doc-title{font-size:14px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdf-device-label{font-size:12px;color:#9ca3af;flex-shrink:0}
+.pdf-toolbar-right{display:flex;gap:8px;flex-shrink:0}
+.tbtn{display:flex;align-items:center;gap:6px;padding:6px 13px;font-size:12px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:pointer;color:#374151;text-decoration:none}
+.tbtn:hover{background:#f3f4f6}
+.pdf-frame-wrap{flex:1;overflow:hidden;background:#525659}
+.pdf-frame-wrap iframe{width:100%;height:100%;border:none;display:block}
+.breadcrumb{padding:8px 18px;background:#f9fafb;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af}
+.breadcrumb span{color:#185FA5}
+.mobile-toggle{display:none;background:none;border:none;cursor:pointer;padding:4px;color:#fff}
+@media(max-width:700px){.sidebar{position:absolute;top:52px;left:0;bottom:0;z-index:50;box-shadow:4px 0 20px rgba(0,0,0,.15);transform:translateX(-100%);transition:transform .2s}.sidebar.mobile-open{transform:translateX(0);width:252px!important}.mobile-toggle{display:block}.toggle-btn{display:none}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('mobile-open')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="topbar-logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    คลังเอกสาร
+  </div>
+  <div class="topbar-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="ค้นหาเอกสาร..." oninput="buildSidebar(this.value)">
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn" onclick="expandAll()">ขยายทั้งหมด</button>
+    <button class="topbar-btn" onclick="collapseAll()">ย่อทั้งหมด</button>
+  </div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span>เอกสารทั้งหมด</span>
+      <button class="toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-scroll" id="ss"></div>
+  </div>
+  <div class="content">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">📂</div>
+      <h2>เลือกเอกสารที่ต้องการ</h2>
+      <p>คลิกที่ชื่ออุปกรณ์เพื่อขยายเมนู แล้วเลือกไฟล์ PDF ที่ต้องการดู</p>
+    </div>
+    <div class="pdf-area" id="pa" style="display:none">
+      <div class="breadcrumb" id="bc"></div>
+      <div class="pdf-toolbar" id="pt"></div>
+      <div class="pdf-frame-wrap"><iframe id="pf" title="PDF Viewer" allowfullscreen></iframe></div>
+    </div>
+  </div>
+</div>
+<script>
+try {
+var D = ${data};
+const TC={manual:{label:'คู่มือ',icon:'📘',badge:'#dbeafe',text:'#1d4ed8'},fix:{label:'แก้ไขปัญหา',icon:'🔧',badge:'#fee2e2',text:'#b91c1c'},install:{label:'ติดตั้ง',icon:'⚙️',badge:'#dcfce7',text:'#15803d'},spec:{label:'ข้อมูลเทคนิค',icon:'📋',badge:'#ede9fe',text:'#6d28d9'},safety:{label:'ความปลอดภัย',icon:'🛡️',badge:'#fef3c7',text:'#b45309'}};
+let ac=null;
+function buildSidebar(q){
+  q=(q||'').toLowerCase();
+  document.getElementById('ss').innerHTML=D.map(dev=>{
+    const docs=dev.docs.filter(d=>!q||d.name.toLowerCase().includes(q)||dev.name.toLowerCase().includes(q));
+    if(q&&!docs.length)return'';
+    const op=!!document.querySelector('#si'+dev.id+'.open');
+    return'<div class="device-group"><div class="device-header" data-devid="'+dev.id+'" onclick="tg(this.dataset.devid,this)"><div class="device-icon" style="background:'+dev.color+'">'+dev.icon+'</div><div class="device-name">'+dev.name+'</div><div class="device-count">'+docs.length+'</div><svg class="chevron'+(op||q?' open':'')+'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div><div class="doc-items'+(op||q?' open':'')+'" id="si'+dev.id+'">'+docs.map(d=>{const c=TC[d.type]||TC.manual;const a=ac&&ac[0]===dev.id&&ac[1]===d.name;return'<div class="doc-item'+(a?' active':'')+'" onclick="pick(this)" data-dev="'+dev.id+'" data-name="'+encodeURIComponent(d.name)+'" data-file="'+encodeURIComponent(d.file)+'" data-type="'+d.type+'" data-devname="'+encodeURIComponent(dev.name)+'"><span class="doc-item-icon">'+c.icon+'</span><span class="doc-item-name">'+d.name+'</span></div>';}).join('')+'</div></div>';
+  }).join('');
+}
+function tg(id,el){document.getElementById('si'+id).classList.toggle('open');el.querySelector('.chevron').classList.toggle('open');}
+function pick(el){
+  const devId=el.dataset.dev;
+  const name=decodeURIComponent(el.dataset.name);
+  const file=decodeURIComponent(el.dataset.file);
+  const type=el.dataset.type;
+  const devName=decodeURIComponent(el.dataset.devname);
+  ac=[devId,name];
+  const c=TC[type]||TC.manual;
+  document.querySelectorAll('.doc-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('pa').style.display='flex';
+  document.getElementById('bc').innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>&nbsp;คลังเอกสาร&nbsp;›&nbsp;'+devName+'&nbsp;›&nbsp;<span>'+name+'</span>';
+  const cleanUrl=encodeURIComponent(file.replace('/preview',''));
+  document.getElementById('pt').innerHTML='<div class="pdf-toolbar-left"><span class="pdf-file-badge" style="background:'+c.badge+';color:'+c.text+'">'+c.label+'</span><div class="pdf-doc-title">'+name+'</div><div class="pdf-device-label">'+devName+'</div></div><div class="pdf-toolbar-right"><button class="tbtn" data-u="'+cleanUrl+'" onclick="window.open(decodeURIComponent(this.dataset.u),\\'_blank\\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>เปิดใน Drive</button></div>';
+  document.getElementById('pf').src=file;
+  document.getElementById('sidebar').classList.remove('mobile-open');
+}
+function expandAll(){document.querySelectorAll('.doc-items').forEach(e=>e.classList.add('open'));document.querySelectorAll('.chevron').forEach(e=>e.classList.add('open'));}
+function collapseAll(){document.querySelectorAll('.doc-items').forEach(e=>e.classList.remove('open'));document.querySelectorAll('.chevron').forEach(e=>e.classList.remove('open'));}
+buildSidebar();
+} catch(err){
+  document.getElementById('ss').innerHTML='<div style="padding:16px;color:#dc2626;font-size:13px;line-height:1.8"><strong>เกิดข้อผิดพลาด</strong><br>'+err.message+'</div>';
+  console.error('Library error:',err);
+}
+<\/script>
+</body></html>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+render();
+tryAutoLoad().then(autoLoaded => {
+  if(!autoLoaded && !_hasLocalData){
+    document.getElementById('frov').classList.add('on');
+  }
+});
+</script>
+</body>
+</html>
