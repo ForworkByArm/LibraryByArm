@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คลังเอกสาร PDF</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f2f5;color:#111;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.topbar{height:52px;background:#1a2740;display:flex;align-items:center;padding:0 1rem;gap:12px;flex-shrink:0}
+.topbar-logo{display:flex;align-items:center;gap:8px;color:#fff;font-size:15px;font-weight:600;width:240px}
+.topbar-logo svg{color:#4da3ff}
+.topbar-search{flex:1;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;max-width:340px}
+.topbar-search input{background:none;border:none;outline:none;color:#fff;font-size:13px;width:100%}
+.topbar-search input::placeholder{color:rgba(255,255,255,.45)}
+.topbar-right{margin-left:auto;display:flex;gap:8px}
+.topbar-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:7px;padding:5px 13px;font-size:12px;cursor:pointer}
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:252px;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .2s}
+.sidebar.collapsed{width:52px}
+.sidebar-header{padding:12px 14px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sidebar-header span{font-size:11px;font-weight:600;color:#9ca3af;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+.sidebar.collapsed .sidebar-header span{opacity:0}
+.toggle-btn{width:28px;height:28px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280}
+.sidebar-scroll{overflow-y:auto;flex:1;padding:8px 0}
+.device-group{margin-bottom:2px}
+.device-header{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;transition:background .1s;user-select:none}
+.device-header:hover{background:#f9fafb}
+.device-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.device-name{font-size:13px;font-weight:600;color:#374151;flex:1;white-space:nowrap;overflow:hidden}
+.device-count{font-size:10px;background:#f3f4f6;color:#9ca3af;padding:1px 6px;border-radius:10px;flex-shrink:0}
+.chevron{color:#9ca3af;transition:transform .2s;flex-shrink:0}
+.chevron.open{transform:rotate(90deg)}
+.sidebar.collapsed .device-name,.sidebar.collapsed .device-count,.sidebar.collapsed .chevron{display:none}
+.doc-items{overflow:hidden;max-height:0;transition:max-height .25s ease}
+.doc-items.open{max-height:600px}
+.doc-item{display:flex;align-items:center;gap:9px;padding:7px 14px 7px 28px;cursor:pointer;transition:background .1s;border-left:3px solid transparent}
+.doc-item:hover{background:#f9fafb}
+.doc-item.active{background:#eff6ff;border-left-color:#185FA5}
+.doc-item.active .doc-item-name{color:#185FA5;font-weight:600}
+.doc-item-icon{font-size:14px;flex-shrink:0}
+.doc-item-name{font-size:12.5px;color:#4b5563;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar.collapsed .doc-items{display:none}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#9ca3af;text-align:center;padding:2rem}
+.welcome-icon{font-size:56px;opacity:.5}
+.welcome h2{font-size:18px;font-weight:600;color:#6b7280}
+.welcome p{font-size:14px;max-width:300px;line-height:1.6}
+.pdf-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.pdf-toolbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.pdf-toolbar-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.pdf-file-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;flex-shrink:0}
+.pdf-doc-title{font-size:14px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdf-device-label{font-size:12px;color:#9ca3af;flex-shrink:0}
+.pdf-toolbar-right{display:flex;gap:8px;flex-shrink:0}
+.tbtn{display:flex;align-items:center;gap:6px;padding:6px 13px;font-size:12px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:pointer;color:#374151;text-decoration:none}
+.tbtn:hover{background:#f3f4f6}
+.pdf-frame-wrap{flex:1;overflow:hidden;background:#525659}
+.pdf-frame-wrap iframe{width:100%;height:100%;border:none;display:block}
+.breadcrumb{padding:8px 18px;background:#f9fafb;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af}
+.breadcrumb span{color:#185FA5}
+.mobile-toggle{display:none;background:none;border:none;cursor:pointer;padding:4px;color:#fff}
+@media(max-width:700px){.sidebar{position:absolute;top:52px;left:0;bottom:0;z-index:50;box-shadow:4px 0 20px rgba(0,0,0,.15);transform:translateX(-100%);transition:transform .2s}.sidebar.mobile-open{transform:translateX(0);width:252px!important}.mobile-toggle{display:block}.toggle-btn{display:none}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('mobile-open')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="topbar-logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    คลังเอกสาร
+  </div>
+  <div class="topbar-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="ค้นหาเอกสาร..." oninput="buildSidebar(this.value)">
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn" onclick="expandAll()">ขยายทั้งหมด</button>
+    <button class="topbar-btn" onclick="collapseAll()">ย่อทั้งหมด</button>
+  </div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span>เอกสารทั้งหมด</span>
+      <button class="toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-scroll" id="ss"></div>
+  </div>
+  <div class="content">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">📂</div>
+      <h2>เลือกเอกสารที่ต้องการ</h2>
+      <p>คลิกที่ชื่ออุปกรณ์เพื่อขยายเมนู แล้วเลือกไฟล์ PDF ที่ต้องการดู</p>
+    </div>
+    <div class="pdf-area" id="pa" style="display:none">
+      <div class="breadcrumb" id="bc"></div>
+      <div class="pdf-toolbar" id="pt"></div>
+      <div class="pdf-frame-wrap"><iframe id="pf" title="PDF Viewer" allowfullscreen></iframe></div>
+    </div>
+  </div>
+</div>
+<script>
+try {
+var D = [{"id":"l6255o0","icon":"🖥️","color":"#dbeafe","name":"Dcim-Stulz","docs":[{"id":"ip507rl","name":"อุปกรณ์ไม่ส่งแจ้งเตือนหรือไม่เปลี่ยนสถานะ เช็คตามนี้","type":"fix","file":"https://drive.google.com/file/d/1MteJnJnFZ-prPFTjbeDEMJ1QjqBWvxyv/preview"},{"id":"v7j2a6m","name":"Dcim ไม่ส่งแจ้งเตือนไลน์&Email","type":"fix","file":"https://drive.google.com/file/d/1U4DoUQnY-RSjiNzgXm5-pDrSfL8WNiVh/preview"},{"id":"225l8zv","name":"วิธีการตั้ง Alarm HealthCheck","type":"spec","file":"https://drive.google.com/file/d/16t0Kfq1wxzp4s-Z8XW6ptsU75xxQo3uH/preview"},{"id":"8vvgxe4","name":"วิธีตั้งเวลา Server Dcim","type":"spec","file":"https://drive.google.com/file/d/1EUeRQhen_63pm-1QQztrQI1CJGGuD0NT/preview"},{"id":"s9fm7yp","name":"วิธีสร้าง Room และ Add Device","type":"manual","file":"https://drive.google.com/file/d/1JRYiOt1lXnOU8xByW8cppDvIYKj-hjBR/preview"},{"id":"o9h47m0","name":"วิธีสร้าง Dashboard","type":"manual","file":"https://drive.google.com/file/d/1uISxV0d2TjXfwktMbBsmBeZ02YXnsT5w/preview"}]},{"id":"c8676z1","icon":"🌡️","color":"#dbeafe","name":"PacketPower","docs":[{"id":"foz036h","name":"อุปกรณ์ไม่ส่งแจ้งเตือนหรือไม่เปลี่ยนสถานะ เช็คตามนี้","type":"fix","file":"https://drive.google.com/file/d/1rX_aJdNNJChqu7vfAo52wECty3wGzRZs/preview"},{"id":"kxwpvz9","name":"วิธีแชร์เน็ตให้ Gateway PacketPower","type":"spec","file":"https://drive.google.com/file/d/1vhEarK6TJvjTzfcuVyVy52kdoHCWmmmv/preview"}]},{"id":"ilvguo9","icon":"📷","color":"#dbeafe","name":"Milestone","docs":[{"id":"h8nmjpj","name":"วิธี Activate license Milestone","type":"manual","file":"https://drive.google.com/file/d/1yp_HdxAZK4fOB8TSiNl9bt59ysPTsIxv/preview"}]},{"id":"vi6onbj","icon":"🔐","color":"#dbeafe","name":"Access-Megvii","docs":[{"id":"dlbe01o","name":"วิธีตั้งเวลา Server Megvii","type":"manual","file":"https://drive.google.com/file/d/1cbogvdODCo6SOVpkS35AXj_G2vgPum5Z/preview"}]}];
+const TC={manual:{label:'คู่มือ',icon:'📘',badge:'#dbeafe',text:'#1d4ed8'},fix:{label:'แก้ไขปัญหา',icon:'🔧',badge:'#fee2e2',text:'#b91c1c'},install:{label:'ติดตั้ง',icon:'⚙️',badge:'#dcfce7',text:'#15803d'},spec:{label:'ข้อมูลเทคนิค',icon:'📋',badge:'#ede9fe',text:'#6d28d9'},safety:{label:'ความปลอดภัย',icon:'🛡️',badge:'#fef3c7',text:'#b45309'}};
+let ac=null;
+function buildSidebar(q){
+  q=(q||'').toLowerCase();
+  document.getElementById('ss').innerHTML=D.map(dev=>{
+    const docs=dev.docs.filter(d=>!q||d.name.toLowerCase().includes(q)||dev.name.toLowerCase().includes(q));
+    if(q&&!docs.length)return'';
+    const op=!!document.querySelector('#si'+dev.id+'.open');
+    return'<div class="device-group"><div class="device-header" data-devid="'+dev.id+'" onclick="tg(this.dataset.devid,this)"><div class="device-icon" style="background:'+dev.color+'">'+dev.icon+'</div><div class="device-name">'+dev.name+'</div><div class="device-count">'+docs.length+'</div><svg class="chevron'+(op||q?' open':'')+'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div><div class="doc-items'+(op||q?' open':'')+'" id="si'+dev.id+'">'+docs.map(d=>{const c=TC[d.type]||TC.manual;const a=ac&&ac[0]===dev.id&&ac[1]===d.name;return'<div class="doc-item'+(a?' active':'')+'" onclick="pick(this)" data-dev="'+dev.id+'" data-name="'+encodeURIComponent(d.name)+'" data-file="'+encodeURIComponent(d.file)+'" data-type="'+d.type+'" data-devname="'+encodeURIComponent(dev.name)+'"><span class="doc-item-icon">'+c.icon+'</span><span class="doc-item-name">'+d.name+'</span></div>';}).join('')+'</div></div>';
+  }).join('');
+}
+function tg(id,el){document.getElementById('si'+id).classList.toggle('open');el.querySelector('.chevron').classList.toggle('open');}
+function pick(el){
+  const devId=el.dataset.dev;
+  const name=decodeURIComponent(el.dataset.name);
+  const file=decodeURIComponent(el.dataset.file);
+  const type=el.dataset.type;
+  const devName=decodeURIComponent(el.dataset.devname);
+  ac=[devId,name];
+  const c=TC[type]||TC.manual;
+  document.querySelectorAll('.doc-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('pa').style.display='flex';
+  document.getElementById('bc').innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>&nbsp;คลังเอกสาร&nbsp;›&nbsp;'+devName+'&nbsp;›&nbsp;<span>'+name+'</span>';
+  const cleanUrl=encodeURIComponent(file.replace('/preview',''));
+  document.getElementById('pt').innerHTML='<div class="pdf-toolbar-left"><span class="pdf-file-badge" style="background:'+c.badge+';color:'+c.text+'">'+c.label+'</span><div class="pdf-doc-title">'+name+'</div><div class="pdf-device-label">'+devName+'</div></div><div class="pdf-toolbar-right"><button class="tbtn" data-u="'+cleanUrl+'" onclick="window.open(decodeURIComponent(this.dataset.u),\'_blank\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>เปิดใน Drive</button></div>';
+  document.getElementById('pf').src=file;
+  document.getElementById('sidebar').classList.remove('mobile-open');
+}
+function expandAll(){document.querySelectorAll('.doc-items').forEach(e=>e.classList.add('open'));document.querySelectorAll('.chevron').forEach(e=>e.classList.add('open'));}
+function collapseAll(){document.querySelectorAll('.doc-items').forEach(e=>e.classList.remove('open'));document.querySelectorAll('.chevron').forEach(e=>e.classList.remove('open'));}
+buildSidebar();
+} catch(err){
+  document.getElementById('ss').innerHTML='<div style="padding:16px;color:#dc2626;font-size:13px;line-height:1.8"><strong>เกิดข้อผิดพลาด</strong><br>'+err.message+'</div>';
+  console.error('Library error:',err);
+}
+</script>
+</body></html>
